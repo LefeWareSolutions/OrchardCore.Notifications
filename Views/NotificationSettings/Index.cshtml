@@ -64,11 +64,11 @@
                         <div class="related">
                             @if(entry.Enabled)
                             {
-                                <a asp-action="EnableNotifcation" asp-route-id="@entry.Id" asp-route-returnUrl="@FullRequestPath" class="btn btn-danger btn-sm">@T["Disable"]</a>
+                                <a asp-action="DisableNotifcation" asp-route-id="@entry.Id" class="btn btn-danger btn-sm">@T["Disable"]</a>
                             }
                             else
                             {
-                                <a asp-action="DisableNotification" asp-route-id="@entry.Id" asp-route-returnUrl="@FullRequestPath" class="btn btn-success btn-sm">@T["Enable"]</a>
+                                <a asp-action="EnableNotification" asp-route-id="@entry.Id" class="btn btn-success btn-sm">@T["Enable"]</a>
                             }
                             <a asp-action="Edit" asp-route-id="@entry.Id" asp-route-returnUrl="@FullRequestPath" class="btn btn-primary btn-sm">@T["Edit Notification"]</a>
                         </div>

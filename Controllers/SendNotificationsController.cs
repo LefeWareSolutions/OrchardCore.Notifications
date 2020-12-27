@@ -9,11 +9,13 @@ using Microsoft.AspNetCore.Mvc.Localization;
 using OrchardCore.Admin;
 using OrchardCore.DisplayManagement.Notify;
 using OrchardCore.Email;
+using OrchardCore.Modules;
 using OrchardCore.Notifications.ViewModels;
 
 namespace OrchardCore.Notifications.Controllers
 {
     [Admin]
+    [Feature(NotificationsConstants.Features.SendNotifications)]
     public class SendNotificationsController : Controller
     {
         private readonly ISmtpService _smtpService;

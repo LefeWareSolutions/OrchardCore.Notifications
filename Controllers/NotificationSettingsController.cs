@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Localization;
 using OrchardCore.Admin;
 using OrchardCore.DisplayManagement.Notify;
+using OrchardCore.Modules;
 using OrchardCore.Navigation;
 using OrchardCore.Notifications.ViewModels;
 using OrchardCore.Settings;
@@ -19,6 +20,7 @@ using YesSql;
 namespace OrchardCore.Notifications.Controllers
 {
     [Admin]
+    [Feature(NotificationsConstants.Features.NotificationSettings)]
     public class NotificationSettingsController : Controller
     {
         private readonly ISiteService _siteService;

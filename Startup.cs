@@ -15,18 +15,25 @@ namespace OrchardCore.Notifications
 {
     public class Startup : StartupBase
     {
-        private readonly AdminOptions _adminOptions;
-        private readonly IConfiguration _configuration;
-
-        public Startup(IConfiguration configuration, IOptions<AdminOptions> adminOptions)
+        public override void ConfigureServices(IServiceCollection services)
         {
-            _configuration = configuration;
+            services.AddScoped<IPermissionProvider, NotificationsPermissions>();
+
+        }
+    }
+
+    [Feature(NotificationsConstants.Features.NotificationSettings)]
+    public class NotifcationSettingsStartup : StartupBase
+    {
+        private readonly AdminOptions _adminOptions;
+
+        public NotifcationSettingsStartup(IOptions<AdminOptions> adminOptions)
+        {
             _adminOptions = adminOptions.Value;
         }
 
         public override void ConfigureServices(IServiceCollection services)
         {
-            services.AddScoped<IPermissionProvider, NotificationsPermissions>();
             services.AddScoped<INavigationProvider, NotificationsAdminMenu>();
         }
 
@@ -35,19 +42,29 @@ namespace OrchardCore.Notifications
             var notificationSettingsControllerName = typeof(NotificationSettingsController).ControllerName();
             routes.MapAreaControllerRoute(
                 name: "NotificationSettings",
-                areaName: "OrchardCore.Notifcations",
-                pattern: _adminOptions.AdminUrlPrefix + "/Notifcations/Types/{NotificationId}/Instances/{action}",
+                areaName: "OrchardCore.Notifications",
+                pattern: _adminOptions.AdminUrlPrefix + "/NotificationsSettings",
                 defaults: new { controller = notificationSettingsControllerName, action = "Index" }
             );
 
+            //routes.MapAreaControllerRoute(
+            //    name: "NotificationSettings",
+            //    areaName: "OrchardCore.Notifications",
+            //    pattern: _adminOptions.AdminUrlPrefix + "/NotificationsSettings/Disable/",
+            //    defaults: new { controller = notificationSettingsControllerName, action = "Index" }
+            //);
+
+
+
             var sendNotificationControllerName = typeof(SendNotificationsController).ControllerName();
             routes.MapAreaControllerRoute(
-                name: "WorkflowTypes",
-                areaName: "OrchardCore.Notifcations",
-                pattern: _adminOptions.AdminUrlPrefix + "/Notifcations/Types/{action}/{id?}",
+                name: "SendNotificiation",
+                areaName: "OrchardCore.Notifications",
+                pattern: _adminOptions.AdminUrlPrefix + "/SendNotification",
                 defaults: new { controller = sendNotificationControllerName, action = "Index" }
             );
         }
+
     }
 
 }
