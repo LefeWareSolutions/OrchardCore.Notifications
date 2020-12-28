@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Localization;
 using OrchardCore.Admin;
+using OrchardCore.DisplayManagement;
 using OrchardCore.DisplayManagement.Notify;
 using OrchardCore.Modules;
 using OrchardCore.Navigation;
@@ -28,16 +29,25 @@ namespace OrchardCore.Notifications.Controllers
         private readonly IWorkflowTypeStore _workflowTypeStore;
         private readonly IAuthorizationService _authorizationService;
         private readonly INotifier _notifier;
+        private readonly dynamic New;
         private readonly IHtmlLocalizer H;
 
-        public NotificationSettingsController(IAuthorizationService authorizationService, ISiteService siteService,
-        ISession session, IWorkflowTypeStore workflowTypeStore, INotifier notifier, IHtmlLocalizer<NotificationSettingsController> h)
+        public NotificationSettingsController(
+            IAuthorizationService authorizationService, 
+            ISiteService siteService,
+            ISession session, 
+            IWorkflowTypeStore workflowTypeStore, 
+            INotifier notifier, 
+            IShapeFactory shapeFactory,
+            IHtmlLocalizer<NotificationSettingsController> h
+            )
         {
             _authorizationService = authorizationService;
             _siteService = siteService;
             _session = session;
             _workflowTypeStore = workflowTypeStore;
             _notifier = notifier;
+            New = shapeFactory;
             H = h;
         }
 
@@ -54,12 +64,13 @@ namespace OrchardCore.Notifications.Controllers
 
             //TODO: Need a way to distinguish notification specific workflows
             var query = _session.Query<WorkflowType, WorkflowTypeIndex>();
+             var count = await query.CountAsync();
             var workflowTypes = await query
                 .Skip(pager.GetStartIndex())
                 .Take(pager.PageSize)
                 .ListAsync();
 
-            //var pagerShape = (await New.Pager(pager)).TotalItemCount(count).RouteData(routeData);
+            var pagerShape = (await New.Pager(pager)).TotalItemCount(count);
             var model = new NotificationSettingsViewModel
             {
                 Notifications = workflowTypes.Select(x => new NotificationEntry
@@ -68,7 +79,7 @@ namespace OrchardCore.Notifications.Controllers
                     Enabled = x.IsEnabled,
                     Name = x.Name
                 }).ToList(),
-                //Pager = pagerShape
+                Pager = pagerShape
             };
             return View(model);
         }

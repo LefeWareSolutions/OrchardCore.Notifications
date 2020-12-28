@@ -2,11 +2,11 @@
 @using OrchardCore.Notifications.ViewModels;
 
 @{
-    @*int startIndex = (Model.Pager.Page - 1) * (Model.Pager.PageSize) + 1;
-    int endIndex = startIndex + Model.WorkflowTypes.Count - 1;*@
+    int startIndex = (Model.Pager.Page - 1) * (Model.Pager.PageSize) + 1;
+    int endIndex = startIndex + Model.Notifications.Count - 1;
 }
-@*<script asp-name="bootstrap-select" depends-on="admin" at="Foot"></script>
-<style asp-name="bootstrap-select"></style>*@
+<script asp-name="bootstrap-select" depends-on="admin" at="Foot"></script>
+
 
 <h1>@RenderTitleSegments(T["Manage Notifications"])</h1>
 
@@ -15,19 +15,6 @@
     <input type="submit" name="submit.BulkAction" class="d-none" />
     @*<input asp-for="Options.BulkAction" type="hidden" />*@
 
-    <div class="row">
-        <div class="form-group col-xl-4 col-sm-6">
-            @*<div class="input-group input-group-sm filter-options">
-                <input id="search-box" asp-for="Options.Search" class="form-control" placeholder="@T["Search"]" type="search" autofocus />
-            </div>*@
-        </div>
-        <div class="form-group col-xl-8 col-sm-6">
-            <div class="btn-group float-right">
-                @*<a asp-action="EditProperties" asp-route-returnUrl="@FullRequestPath" class="btn btn-sm btn-primary" role="button">@T["Create Workflow Type"]</a>*@
-            </div>
-        </div>
-    </div>
-
     <ul class="list-group with-checkbox">
         <li class="list-group-item bg-primary">
             <div class="row">
@@ -35,8 +22,8 @@
                     <div class="custom-control custom-checkbox mt-2 mr-n2">
                         <input type="checkbox" class="custom-control-input" id="select-all">
                         <label class="custom-control-label" for="select-all" id="select-all-label" title="@T["Select All"]"></label>
-                        @* <label id="items" for="select-all">@T.Plural(Model.WorkflowTypes.Count, "1 item", "{0} items")<span class="text-muted" title="@T["Items {0} to {1}", startIndex, endIndex]">@T.Plural((int)Model.Pager.TotalItemCount, " / {0} item in total", " / {0} items in total")</span></label>
-                        <label id="selected-items" class="text-muted" for="select-all"></label> *@
+                        <label id="items" for="select-all">@T.Plural(Model.Notifications.Count, "1 item", "{0} items")<span class="text-muted" title="@T["Items {0} to {1}", startIndex, endIndex]">@T.Plural((int)Model.Pager.TotalItemCount, " / {0} item in total", " / {0} items in total")</span></label>
+                        <label id="selected-items" class="text-muted" for="select-all"></label>
                     </div>
                 </div>
                 <div class="form-group col-2 mb-n1" style="display:none" id="actions">
@@ -64,20 +51,20 @@
                         <div class="related">
                             @if(entry.Enabled)
                             {
-                                <a asp-action="DisableNotifcation" asp-route-id="@entry.Id" class="btn btn-danger btn-sm">@T["Disable"]</a>
+                                <a asp-action="DisableNotifcation" asp-controller="NotificationSettings" asp-area="OrchardCore.Notifications" asp-route-id="@entry.Id" class="btn btn-danger btn-sm">@T["Disable"]</a>
                             }
                             else
                             {
-                                <a asp-action="EnableNotification" asp-route-id="@entry.Id" class="btn btn-success btn-sm">@T["Enable"]</a>
+                                <a asp-action="EnableNotification" asp-controller="NotificationSettings" asp-area="OrchardCore.Notifications" asp-route-id="@entry.Id" class="btn btn-success btn-sm">@T["Enable"]</a>
                             }
-                            <a asp-action="Edit" asp-route-id="@entry.Id" asp-route-returnUrl="@FullRequestPath" class="btn btn-primary btn-sm">@T["Edit Notification"]</a>
+                            <a asp-action="Edit" asp-route-id="@entry.Id" asp-controller="WorkflowType" asp-area="OrchardCore.Workflows" asp-route-returnUrl="@FullRequestPath" class="btn btn-primary btn-sm">@T["Edit Notification"]</a>
                         </div>
 
                         <div class="custom-control custom-checkbox float-left">
                             <input type="checkbox" class="custom-control-input" value="@entry.Id" name="itemIds" id="itemIds-@entry.Id">
                             <label class="custom-control-label" for="itemIds-@entry.Id"></label>
                         </div>
-                        <a asp-action="Edit" asp-route-id="@entry.Id" asp-route-returnUrl="@FullRequestPath">@entry.Name</a>
+                        <a asp-action="Edit" asp-route-id="@entry.Id" asp-controller="WorkflowType" asp-area="OrchardCore.Workflows" asp-route-returnUrl="@FullRequestPath">@entry.Name</a>
 
                         <div class="metadata">
                             @*@if (entry.WorkflowCount > 0)
@@ -101,3 +88,68 @@
 </form>
 
 @await DisplayAsync(Model.Pager)
+
+
+
+<script at="Foot">
+    $(function () {
+        $('select').selectpicker();
+
+        var actions = $("#actions");
+        var items = $("#items");
+        var filters = $(".filter");
+        var selectAllCtrl = $("#select-all");
+        var selectedItems = $("#selected-items");
+        var itemsCheckboxes = $(":checkbox[name='itemIds']");
+
+        $(".filter-options input").on("change", function () {
+            $("[name='submit.Filter']").click();
+        });
+
+        $(".dropdown-menu .dropdown-item").filter(function() {
+            return $(this).data("action");
+        }).on("click", function () {
+            if ($(":checkbox[name='itemIds']:checked").length > 1) {
+                var $this = $(this);
+                confirmDialog({title: $this.data('title'), message: $this.data('message'), callback: function(r) {
+                    if (r) {
+                        $("[name='Options.BulkAction']").val($this.data("action"));
+                        $("[name='submit.BulkAction']").click();
+                    }
+                }});
+            }
+        });
+
+        function displayActionsOrFilters() {
+            if ($(":checkbox[name='itemIds']:checked").length > 1) {
+                actions.show();
+                filters.hide();
+                selectedItems.show();
+                items.hide();
+            }
+            else {
+                actions.hide();
+                filters.show();
+                selectedItems.hide();
+                items.show();
+            }
+        }
+
+        selectAllCtrl.click(function(){
+            itemsCheckboxes.not(this).prop("checked", this.checked);
+            selectedItems.text($(":checkbox[name='itemIds']:checked").length + ' @T["selected"]');
+            displayActionsOrFilters();
+        });
+
+        itemsCheckboxes.on("click", function () {
+            var itemsCount = $(":checkbox[name='itemIds']").length;
+            var selectedItemsCount = $(":checkbox[name='itemIds']:checked").length;
+
+            selectAllCtrl.prop("checked", selectedItemsCount == itemsCount);
+            selectAllCtrl.prop("indeterminate", selectedItemsCount > 0 && selectedItemsCount < itemsCount);
+            
+            selectedItems.text(selectedItemsCount + ' @T["selected"]');
+            displayActionsOrFilters();
+        });
+    });
+</script>
