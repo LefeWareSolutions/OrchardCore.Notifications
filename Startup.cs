@@ -5,11 +5,16 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using OrchardCore.Admin;
+using OrchardCore.ContentManagement;
+using OrchardCore.Data.Migration;
 using OrchardCore.Modules;
 using OrchardCore.Mvc.Core.Utilities;
 using OrchardCore.Navigation;
 using OrchardCore.Notifications.Controllers;
+using OrchardCore.Notifications.SendNotifications.Models;
 using OrchardCore.Security.Permissions;
+using OrchardCore.Notifications.SendNotifications.Migrations;
+using OrchardCore.Notifications.Handlers;
 
 namespace OrchardCore.Notifications
 {
@@ -18,7 +23,7 @@ namespace OrchardCore.Notifications
         public override void ConfigureServices(IServiceCollection services)
         {
             services.AddScoped<IPermissionProvider, NotificationsPermissions>();
-
+            services.AddScoped<INavigationProvider, NotificationsAdminMenu>();
         }
     }
 
@@ -34,7 +39,7 @@ namespace OrchardCore.Notifications
 
         public override void ConfigureServices(IServiceCollection services)
         {
-            services.AddScoped<INavigationProvider, NotificationsAdminMenu>();
+            
         }
 
         public override void Configure(IApplicationBuilder app, IEndpointRouteBuilder routes, IServiceProvider serviceProvider)
@@ -53,16 +58,40 @@ namespace OrchardCore.Notifications
             //    pattern: _adminOptions.AdminUrlPrefix + "/NotificationsSettings/Disable/",
             //    defaults: new { controller = notificationSettingsControllerName, action = "Index" }
             //);
+        }
 
+    }
 
+    [Feature(NotificationsConstants.Features.SendNotifications)]
+    public class SendNotifcationsStartup : StartupBase
+    {
+        private readonly AdminOptions _adminOptions;
 
-            var sendNotificationControllerName = typeof(SendNotificationsController).ControllerName();
-            routes.MapAreaControllerRoute(
-                name: "SendNotificiation",
-                areaName: "OrchardCore.Notifications",
-                pattern: _adminOptions.AdminUrlPrefix + "/SendNotification",
-                defaults: new { controller = sendNotificationControllerName, action = "Index" }
-            );
+        public SendNotifcationsStartup(IOptions<AdminOptions> adminOptions)
+        {
+            _adminOptions = adminOptions.Value;
+        }
+
+        public override void ConfigureServices(IServiceCollection services)
+        {
+            //ContentParts
+            services.AddContentPart<Notification>()
+                .AddHandler<NotificationHandler>();
+            services.AddContentPart<NotificationEmailMessagePart>();
+            services.AddContentPart<NotificationRecipientPart>();
+            //Migrations
+            services.AddScoped<IDataMigration, SendNotificationsMigrations>();
+        }
+
+        public override void Configure(IApplicationBuilder app, IEndpointRouteBuilder routes, IServiceProvider serviceProvider)
+        {
+            // var sendNotificationControllerName = typeof(SendNotificationsController).ControllerName();
+            // routes.MapAreaControllerRoute(
+            //     name: "SendNotificiation",
+            //     areaName: "OrchardCore.Notifications",
+            //     pattern: _adminOptions.AdminUrlPrefix + "/SendNotification",
+            //     defaults: new { controller = sendNotificationControllerName, action = "Index" }
+            // );
         }
 
     }

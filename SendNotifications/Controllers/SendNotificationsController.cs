@@ -10,7 +10,11 @@ using OrchardCore.Admin;
 using OrchardCore.DisplayManagement.Notify;
 using OrchardCore.Email;
 using OrchardCore.Modules;
+using OrchardCore.Notifications.SendNotifications;
 using OrchardCore.Notifications.ViewModels;
+using OrchardCore.Users.Indexes;
+using OrchardCore.Users.Models;
+using YesSql;
 
 namespace OrchardCore.Notifications.Controllers
 {
@@ -22,14 +26,16 @@ namespace OrchardCore.Notifications.Controllers
         private readonly IAuthorizationService _authorizationService;
         private readonly INotifier _notifier;
         private readonly IHtmlLocalizer H;
+        private readonly ISession _session;
 
         public SendNotificationsController(IAuthorizationService authorizationService, INotifier notifier, ISmtpService smtpService,
-            IHtmlLocalizer<SendNotificationsController> h)
+            IHtmlLocalizer<SendNotificationsController> h, ISession session)
         {
             _authorizationService = authorizationService;
             _notifier = notifier;
             _smtpService = smtpService;
             H = h;
+            _session = session;
         }
 
         [HttpGet]
@@ -40,7 +46,29 @@ namespace OrchardCore.Notifications.Controllers
                 return Forbid();
             }
 
-            return View();
+            //TODO: Make more generic or create an abstraction to allow different groups
+            var sendNotificationViewModel = new SendNotificationViewModel();
+            sendNotificationViewModel.NotificationRecepientGroups.Add(await GetUserGroup());
+
+            return View(sendNotificationViewModel);
+        }
+
+        //TODO: Move to seperate class
+        private async Task<NotificationRecepientGroupViewModel> GetUserGroup()
+        {
+            var userGroup =  new NotificationRecepientGroupViewModel();
+            userGroup.GroupName = "Users";
+            
+            var allUsers = await _session.Query<User, UserIndex>().ListAsync();
+            foreach (var user in allUsers)
+            {
+                userGroup.NotificationRecepients.Add(new NotificationRecipientViewModel()
+                {
+                    Email = user.Email,
+                    Name = user.UserName,
+                });
+            }
+            return userGroup;
         }
 
         [HttpPost]

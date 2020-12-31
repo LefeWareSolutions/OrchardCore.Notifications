@@ -4,6 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using OrchardCore.Notifications.SendNotifications;
 
 namespace OrchardCore.Notifications.ViewModels
 {
@@ -22,5 +23,7 @@ namespace OrchardCore.Notifications.ViewModels
         public string Subject { get; set; }
 
         public string Body { get; set; }
+
+        public List<NotificationRecepientGroupViewModel> NotificationRecepientGroups { get; set; } = new List<NotificationRecepientGroupViewModel>();
     }
 }
