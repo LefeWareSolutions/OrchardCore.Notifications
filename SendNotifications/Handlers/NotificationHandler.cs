@@ -35,9 +35,9 @@ namespace OrchardCore.Notifications.Handlers
             var notificationEmailMessagePart = contentItem.As<NotificationEmailMessagePart>();
 
             //Get Recipients
-            var userIds = notificationRecipientPart.UserEmails.UserIds;
             var emails = new StringBuilder();
-            emails.Append(notificationRecipientPart.Emails);
+            emails.Append(notificationRecipientPart.Emails.Text);
+            var userIds = notificationRecipientPart.UserEmails.UserIds;
             foreach(var userId in userIds)
             {
                 var user = await _session.Query<User, UserIndex>(x => x.UserId == userId).FirstOrDefaultAsync();
@@ -51,7 +51,7 @@ namespace OrchardCore.Notifications.Handlers
                 Bcc = notificationEmailMessagePart.Bcc.Text,
                 Cc = notificationEmailMessagePart.Cc.Text,
                 Subject =  notificationEmailMessagePart.Subject.Text,
-                Body = notificationEmailMessagePart.Body.Text
+                Body = notificationEmailMessagePart.MessageBody.Html
             };
             
             var result = await _smtpService.SendAsync(message);
@@ -69,24 +69,6 @@ namespace OrchardCore.Notifications.Handlers
                 _notifier.Success(H["Message sent successfully"]);
             }
 
-        }
-
-        private MailMessage CreateMailMessageNotificationItem(string recipients, string bcc,  )
-        {
-
-
-            if (!String.IsNullOrWhiteSpace(notificationSettings.Sender))
-            {
-                message.Sender = notificationSettings.Sender;
-            }
-
-            if (!String.IsNullOrWhiteSpace(notificationSettings.Subject))
-            {
-                message.Subject = notificationSettings.Subject;
-            }
-
-
-            return message;
         }
     }
 }

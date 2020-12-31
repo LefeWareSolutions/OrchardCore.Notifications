@@ -9,6 +9,6 @@ namespace OrchardCore.Notifications.SendNotifications.Models
         public TextField Cc { get; set; }
         public TextField Bcc { get; set; }
         public TextField Subject { get; set; }
-        public TextField Body { get; set; }
+        public HtmlField MessageBody { get; set; }
     }
 }

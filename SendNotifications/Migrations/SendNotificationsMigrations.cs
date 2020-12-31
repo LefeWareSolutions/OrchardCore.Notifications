@@ -24,15 +24,15 @@ namespace OrchardCore.Notifications.SendNotifications.Migrations
             _contentDefinitionManager.AlterPartDefinition("NotificationRecipientPart", part => part
                 .Attachable()
                 .WithDescription("Fields for notifcation recipients")
-                .WithField("Emails", field => field
-                    .WithDisplayName("Emails")
-                    .OfType("TextField")
-                    .WithSettings(new TextFieldSettings(){Hint = "Add email addresses seperated by comas" })
-                )
                 .WithField("UserEmails", field => field
                     .WithDisplayName("User Emails")
                     .OfType("UserPickerField")
-                    .WithSettings(new UserPickerFieldSettings(){Hint="Add user email addresses", Multiple = true })
+                    .WithSettings(new UserPickerFieldSettings() { Hint = "Add user email addresses", Multiple = true })
+                )
+                .WithField("Emails", field => field
+                    .WithDisplayName("Add Additional Emails")
+                    .OfType("TextField")
+                    .WithSettings(new TextFieldSettings(){Hint = "Add email addresses seperated by comas" })
                 )
             );
 
