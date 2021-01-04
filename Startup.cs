@@ -23,7 +23,6 @@ namespace OrchardCore.Notifications
         public override void ConfigureServices(IServiceCollection services)
         {
             services.AddScoped<IPermissionProvider, NotificationsPermissions>();
-            services.AddScoped<INavigationProvider, NotificationsAdminMenu>();
         }
     }
 
@@ -39,7 +38,7 @@ namespace OrchardCore.Notifications
 
         public override void ConfigureServices(IServiceCollection services)
         {
-            
+            services.AddScoped<INavigationProvider, NotificationsAdminMenu>();
         }
 
         public override void Configure(IApplicationBuilder app, IEndpointRouteBuilder routes, IServiceProvider serviceProvider)
@@ -50,6 +49,13 @@ namespace OrchardCore.Notifications
                 areaName: "OrchardCore.Notifications",
                 pattern: _adminOptions.AdminUrlPrefix + "/NotificationsSettings",
                 defaults: new { controller = notificationSettingsControllerName, action = "Index" }
+            );
+
+            routes.MapAreaControllerRoute(
+                name: "EditNotificationSetting",
+                areaName: "OrchardCore.Notifications",
+                pattern: _adminOptions.AdminUrlPrefix + "/EditNotificationSetting",
+                defaults: new { controller = notificationSettingsControllerName, action = "Edit" }
             );
 
             //routes.MapAreaControllerRoute(

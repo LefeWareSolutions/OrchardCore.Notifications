@@ -11,6 +11,7 @@ using OrchardCore.DisplayManagement;
 using OrchardCore.DisplayManagement.Notify;
 using OrchardCore.Modules;
 using OrchardCore.Navigation;
+using OrchardCore.Notifications.NotificationSettings.ViewModels;
 using OrchardCore.Notifications.ViewModels;
 using OrchardCore.Settings;
 using OrchardCore.Workflows.Indexes;
@@ -84,8 +85,49 @@ namespace OrchardCore.Notifications.Controllers
             return View(model);
         }
 
-        [HttpPut]
-        public async Task<IActionResult> EnableNotifcation(string id)
+        public async Task<IActionResult> Edit(int id)
+        {
+            if (!await _authorizationService.AuthorizeAsync(User, NotificationsPermissions.EditNotificationSettings))
+            {
+                return Forbid();
+            }
+            var workflowType = await _workflowTypeStore.GetAsync(id);
+            var activity = workflowType.Activities.FirstOrDefault(x => x.Name == "EmailTask");
+
+            var notificationTemplate = new NotificationTemplate()
+            {
+                WorkflowTypeId = id,
+                Name = workflowType.Name,
+                Subject = activity.Properties["Subject"]["Expression"].ToString(),
+                TemplateBody = activity.Properties["Body"]["Expression"].ToString(),
+            };
+            return View(notificationTemplate);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> EditPost(NotificationTemplate model)
+        {
+            if (!await _authorizationService.AuthorizeAsync(User, NotificationsPermissions.EditNotificationSettings))
+            {
+                return Forbid();
+            }
+            var workflowType = await _workflowTypeStore.GetAsync(model.WorkflowTypeId);
+            var activity = workflowType.Activities.FirstOrDefault(x => x.Name == "EmailTask");
+
+            activity.Properties["Subject"]["Expression"] = model.Subject;
+            activity.Properties["Body"]["Expression"] = model.TemplateBody;
+
+            _session.Save(workflowType);
+            _notifier.Success(H["Notification Template updated successfully."]);
+
+            if (!string.IsNullOrEmpty(model.ReturnUrl))
+            {
+                return View(model.ReturnUrl);
+            }
+            return RedirectToAction("Edit", new { id = model.WorkflowTypeId });
+        }
+
+        public async Task<IActionResult> EnableNotification(int id)
         {
             if (!await _authorizationService.AuthorizeAsync(User, NotificationsPermissions.EditNotificationSettings))
             {
@@ -98,19 +140,7 @@ namespace OrchardCore.Notifications.Controllers
              return RedirectToAction("Index");
         }
 
-        public async Task<IActionResult> EditNotification(string id)
-        {
-            if (!await _authorizationService.AuthorizeAsync(User, NotificationsPermissions.EditNotificationSettings))
-            {
-                return Forbid();
-            }
-            var workflowType = await _workflowTypeStore.GetAsync(id);
-
-             return RedirectToAction("Index");
-        }
-
-        [HttpPut]
-        public async Task<IActionResult> DisableNotifcation(string id)
+        public async Task<IActionResult> DisableNotifcation(int id)
         {
             if (!await _authorizationService.AuthorizeAsync(User, NotificationsPermissions.EditNotificationSettings))
             {
@@ -123,7 +153,7 @@ namespace OrchardCore.Notifications.Controllers
              return RedirectToAction("Index");
         }
 
-        private async Task SetNotifcationEnabled(string id, bool enabled)
+        private async Task SetNotifcationEnabled(int id, bool enabled)
         {
             var workflowType = await _workflowTypeStore.GetAsync(id);
             workflowType.IsEnabled = enabled;
