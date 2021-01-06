@@ -22,10 +22,17 @@ namespace OrchardCore.Notifications
                 return Task.CompletedTask;
             }
 
+            var rvd = new RouteValueDictionary
+            {
+                { "Area", "OrchardCore.Contents" },
+                { "Options.SelectedContentType", "Notification" },
+                { "Options.CanCreateSelectedContentType", true },
+            };
+
             builder.Add(T["Notifications"], "7", settings => settings
                 .AddClass("notifications").Id("notifications")
                 .Add(T["Send Notification"], "1", client => client
-                    .Action("Index", "SendNotifications", "OrchardCore.Notifications")
+                    .Action("List", "Admin", rvd)
                     .LocalNav()
                 )
                 .Add(T["Notifcation Settings"], "2", client => client
